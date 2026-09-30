@@ -1,6 +1,6 @@
 {
   "name": "pandao-knowledge",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "检索本机资料，显示原文、文件名和行号。",
   "license": "MIT",
