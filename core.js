@@ -253,6 +253,13 @@
       .filter(Boolean);
     for (const [index, line] of lines.entries()) {
       if (
+        /^(?:(?:本次|此次|这次)?讨论|(?:会议|话题|主题|议题)(?:内容|主题)?)/.test(
+          line,
+        ) &&
+        !/负责|待办|需要|请|安排|TODO|行动项/i.test(line)
+      )
+        continue;
+      if (
         !/负责|待办|需要|请|安排|跟进|提交|完成|确认|处理|制作|检查|整理|采购|联系|更新|TODO|行动项/i.test(
           line,
         )
