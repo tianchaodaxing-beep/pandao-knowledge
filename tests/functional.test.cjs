@@ -1,0 +1,12 @@
+const test=require('node:test'); const assert=require('node:assert/strict'); const B=require('../core.js');
+const docs=[{name:'售后.md',text:'退货申请审核后处理退款。'},{name:'采购.md',text:'采购需要核对库存。'}];
+test("中文检索返回原始出处",()=>{const r=B.search(docs,'退货退款');assert.equal(r[0].name,'售后.md');assert.ok(r[0].text.includes('退款'));assert.ok(r[0].start>=1);});
+test("英文检索忽略大小写",()=>{assert.equal(B.search([{name:'a',text:'Inventory management'}],'INVENTORY')[0].name,'a');});
+test("韩文单词可以检索",()=>{assert.equal(B.search([{name:'韩文.txt',text:'상품 재고 관리'}],'재고')[0].name,'韩文.txt');});
+test("无匹配不编造答案",()=>{assert.equal(B.search(docs,'完全不相关的火星航空技术').length,0);});
+test("保留原文标记不执行内容",()=>{assert.ok(B.search([{name:'危险示例',text:'<img onerror=alert(1)>退货退款'}],'退款')[0].text.includes('<img'));});
+test("结果数量受限制",()=>{assert.equal(B.search([{name:'a',text:'库存'},{name:'b',text:'库存'}],'库存',1).length,1);});
+test("空资料没有结果",()=>{assert.deepEqual(B.search([],'退款'),[]);});
+test("空查询被拒绝",()=>{assert.throws(()=>B.search(docs,'  '));});
+test("行号与来源一致",()=>{const r=B.chunks([{name:'a',text:'# 标题\n\n退货流程'}]);assert.equal(r[0].start,1);assert.equal(r[0].end,3);});
+test("超长单行按段返回并保留行号",()=>{const r=B.chunks([{name:'a',text:'库存'.repeat(2000)}]);assert.ok(r.length>=4);assert.ok(r.every(x=>x.text.length<=1100&&x.start===1&&x.end===1));});
