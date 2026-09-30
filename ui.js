@@ -229,7 +229,7 @@
     XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(safe), "结果");
     XLSX.writeFile(book, name.endsWith(".xlsx") ? name : name + ".xlsx");
   }
-  async function readRows(file) {
+  async function readRows(file, dateHeaders = []) {
     if (!file) throw Error("请选择表格");
     if (file.size > 10 * 1024 * 1024) throw Error("请选择小于10 MB的表格");
     if (!/\.(xlsx|xls|csv|tsv)$/i.test(file.name))
@@ -244,7 +244,7 @@
     } else
       book = XLSX.read(await file.arrayBuffer(), {
         type: "array",
-        cellDates: false,
+        cellDates: dateHeaders.length > 0,
       });
     const sheet = book.Sheets[book.SheetNames[0]];
     if (!sheet) throw Error("表格没有工作表");
@@ -264,7 +264,13 @@
       throw Error("第一行须为非空且不重复的列名");
     const rows = data
       .filter((r) => r.some((x) => String(x).trim()))
-      .map((r) => Object.fromEntries(headers.map((k, i) => [k, r[i] ?? ""])));
+      .map((r) => Object.fromEntries(headers.map((k, i) => {
+        const v = r[i];
+        const value = dateHeaders.includes(k) && v instanceof Date
+          ? [v.getFullYear(), String(v.getMonth() + 1).padStart(2, "0"), String(v.getDate()).padStart(2, "0")].join("-")
+          : v ?? "";
+        return [k, value];
+      })));
     if (!rows.length) throw Error("表格没有数据行，请填写模板后重新选择");
     return { headers, rows, name: file.name };
   }
